@@ -1,49 +1,44 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, TIMESTAMP
-from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy.sql import func
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from schema import Base, User, Post, Hashtag, PostHashtag, Comment
 
-Base = declarative_base()
+engine = create_engine("mysql+mysqlconnector://root:yourpassword@localhost/social_media")
+Session = sessionmaker(bind=engine)
+session = Session()
 
-class User(Base):
-    __tablename__ = "users"
-    user_id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(100))
-    email = Column(String(100))
-    join_date = Column(TIMESTAMP, server_default=func.now())
-    posts = relationship("Post", back_populates="user")
-    comments = relationship("Comment", back_populates="user")
+Base.metadata.drop_all(engine)
+Base.metadata.create_all(engine)
 
-class Post(Base):
-    __tablename__ = "posts"
-    post_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.user_id"))
-    content = Column(Text)
-    created_at = Column(TIMESTAMP, server_default=func.now())
-    user = relationship("User", back_populates="posts")
-    hashtags = relationship("PostHashtag", back_populates="post")
-    comments = relationship("Comment", back_populates="post")
+u1 = User(name="Alice", email="alice@mail.com")
+u2 = User(name="Bob", email="bob@mail.com")
+u3 = User(name="Charlie", email="charlie@mail.com")
 
-class Hashtag(Base):
-    __tablename__ = "hashtags"
-    hashtag_id = Column(Integer, primary_key=True, autoincrement=True)
-    tag = Column(String(100), unique=True)
-    posts = relationship("PostHashtag", back_populates="hashtag")
+p1 = Post(user=u1, content="Loving #AI and #Python")
+p2 = Post(user=u2, content="Exploring #Tech and #AI")
+p3 = Post(user=u3, content="Learning #Python for data science")
 
-class PostHashtag(Base):
-    __tablename__ = "post_hashtags"
-    post_id = Column(Integer, ForeignKey("posts.post_id"), primary_key=True)
-    hashtag_id = Column(Integer, ForeignKey("hashtags.hashtag_id"), primary_key=True)
-    post = relationship("Post", back_populates="hashtags")
-    hashtag = relationship("Hashtag", back_populates="posts")
+h1 = Hashtag(tag="#AI")
+h2 = Hashtag(tag="#Python")
+h3 = Hashtag(tag="#Tech")
+h4 = Hashtag(tag="#DataScience")
 
-class Comment(Base):
-    __tablename__ = "comments"
-    comment_id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(Integer, ForeignKey("posts.post_id"))
-    user_id = Column(Integer, ForeignKey("users.user_id"))
-    parent_comment_id = Column(Integer, ForeignKey("comments.comment_id"), nullable=True)
-    content = Column(Text)
-    created_at = Column(TIMESTAMP, server_default=func.now())
-    post = relationship("Post", back_populates="comments")
-    user = relationship("User", back_populates="comments")
-    replies = relationship("Comment", backref="parent", remote_side=[comment_id])
+session.add_all([u1, u2, u3, p1, p2, p3, h1, h2, h3, h4])
+session.commit()
+
+session.add_all([
+    PostHashtag(post=p1, hashtag=h1),
+    PostHashtag(post=p1, hashtag=h2),
+    PostHashtag(post=p2, hashtag=h3),
+    PostHashtag(post=p2, hashtag=h1),
+    PostHashtag(post=p3, hashtag=h2),
+    PostHashtag(post=p3, hashtag=h4),
+])
+session.commit()
+
+c1 = Comment(post=p1, user=u2, content="Great post!")
+c2 = Comment(post=p1, user=u1, parent=c1, content="Thanks!")
+c3 = Comment(post=p1, user=u2, parent=c2, content="You're welcome!")
+c4 = Comment(post=p2, user=u3, content="Nice insights")
+
+session.add_all([c1, c2, c3, c4])
+session.commit()
