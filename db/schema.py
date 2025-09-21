@@ -44,6 +44,9 @@ class Comment(Base):
     parent_comment_id = Column(Integer, ForeignKey("comments.comment_id"), nullable=True)
     content = Column(Text)
     created_at = Column(TIMESTAMP, server_default=func.now())
+
     post = relationship("Post", back_populates="comments")
     user = relationship("User", back_populates="comments")
-    replies = relationship("Comment", backref="parent", remote_side=[comment_id])
+
+    parent = relationship("Comment", remote_side=[comment_id], back_populates="replies")
+    replies = relationship("Comment", back_populates="parent")
