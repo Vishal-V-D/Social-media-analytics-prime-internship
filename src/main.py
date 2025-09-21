@@ -43,7 +43,7 @@ def related_hashtags(base_tag: str):
 
 @app.get("/comment-engagement")
 def comment_engagement():
-    session = SessionLocal()
+    session = Session()
     try:
         comments = session.query(Comment).all()
         result = []
