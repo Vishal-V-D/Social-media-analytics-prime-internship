@@ -3,12 +3,14 @@ from sqlalchemy.orm import sessionmaker
 from schema import Base, User, Post, Hashtag, PostHashtag, Comment
 from dotenv import load_dotenv
 import os
+from urllib.parse import quote_plus
 
 load_dotenv()
 
 DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_PASSWORD = quote_plus(os.getenv("DB_PASSWORD"))
+
 DB_NAME = os.getenv("DB_NAME")
 
 engine = create_engine(f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
