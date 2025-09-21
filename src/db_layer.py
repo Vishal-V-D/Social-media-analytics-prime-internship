@@ -15,7 +15,7 @@ DB_PASSWORD = quote_plus(os.getenv("DB_PASSWORD"))
 DB_NAME = os.getenv("DB_NAME")
 
 engine = create_engine(f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
-Session = sessionmaker(bind=engine)
+SessionLocal = sessionmaker(bind=engine)
 
 @retry(max_attempts=3, delay=1, backoff=2)   
 def get_trending_hashtags():
@@ -24,7 +24,7 @@ def get_trending_hashtags():
     if cached:
         return cached
 
-    session = Session()
+    session = SessionLocal()
     try:
         results = session.query(
             Hashtag.tag,
